@@ -15,6 +15,8 @@ df_train = pd.read_csv('data/train.csv', encoding="ISO-8859-1")
 df_test = pd.read_csv('data/test.csv', encoding="ISO-8859-1")
 # df_attr = pd.read_csv('../input/attributes.csv')
 df_pro_desc = pd.read_csv('data/product_descriptions.csv')
+df_attr = pd.read_csv('data/attributes.csv')
+df_brand = df_attr[df_attr.name == "MFG Brand Name"][["product_uid", "value"]].rename(columns={"value": "brand"})
 
 num_train = df_train.shape[0]
 
@@ -72,6 +74,7 @@ def seg_words(str1, str2):
 df_all = pd.concat((df_train, df_test), axis=0, ignore_index=True)
 
 df_all = pd.merge(df_all, df_pro_desc, how='left', on='product_uid')
+df_all = pd.merge(df_all, df_brand, how='left', on='product_uid')
 
 df_all['search_term'] = df_all['search_term'].map(lambda x:str_stemmer(x))
 df_all['product_title'] = df_all['product_title'].map(lambda x:str_stemmer(x))
@@ -122,14 +125,15 @@ for (train_name, train_series) in df_all.iteritems():
             df_all.loc[train_series.isnull(), train_name] = train_series.mean()
 
 
+d_col_drops=['id','relevance','search_term','product_title','product_description','product_info','attr','brand']
 
 df_train = df_all.iloc[:num_train]
 df_test = df_all.iloc[num_train:]
 id_test = df_test['id']
 
 y_train = df_train['relevance'].values
-X_train = df_train.drop(['id','relevance'],axis=1).values
-X_test = df_test.drop(['id','relevance'],axis=1).values
+X_train = df_train.drop(d_col_drops,axis=1).values
+X_test = df_test.drop(d_col_drops,axis=1).values
 
 rf = RandomForestRegressor(n_estimators=15, max_depth=6, random_state=0, verbose=1)
 clf = BaggingRegressor(rf, n_estimators=45, max_samples=0.1, random_state=25, verbose=2)
