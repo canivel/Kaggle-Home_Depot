@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import time
 start_time = time.time()
 
@@ -77,7 +79,7 @@ def str_stem(s):
         s = s.replace(" . "," ")
         #s = (" ").join([z for z in s.split(" ") if z not in stop_w])
         s = (" ").join([str(strNum[z]) if z in strNum else z for z in s.split(" ")])
-        s = (" ").join([stemmer.stem(z) for z in s.split(" ")])
+        s = (" ").join([stemmer.stem(z.decode('utf-8')) for z in s.split(" ")])
         
         s = s.lower()
         s = s.replace("toliet","toilet")
@@ -223,6 +225,9 @@ test2 = df_test[d_col_drops]
 train = df_train.drop(d_col_drops,axis=1)[:]
 test =  df_test.drop(d_col_drops,axis=1)[:]
 
+print (train.shape, test.shape)
+print (train2.shape, test2.shape)
+
 print("--- Features Set: %s minutes ---" % round(((time.time() - start_time)/60),2))
 
 for (train_name, train_series), (test_name, test_series) in zip(train.iteritems(),test.iteritems()):
@@ -236,11 +241,19 @@ for (train_name, train_series), (test_name, test_series) in zip(train.iteritems(
         tmp_len = len(test[test_series.isnull()])
         if tmp_len>0:
             test.loc[test_series.isnull(), test_name] = train_series.mean() 
-            
+
+
+print (train.shape, test.shape)
+
 train=pd.concat([train,train2], axis=1)[:]
 test=pd.concat([test,test2], axis=1)[:]
+
+train.to_csv('train_featured_1.csv')
+test.to_csv('test_featured_1.csv')
 #xgtrain = xgb.DMatrix(train.values, y_train.values)
 #xgtest = xgb.DMatrix(test.values)
+
+print (train.shape, test.shape)
 
 xgb_model = xgb.XGBRegressor(learning_rate=0.25, silent=False, objective="reg:linear", nthread=-1, gamma=0, min_child_weight=1, max_delta_step=0,
                  subsample=1, colsample_bytree=1, colsample_bylevel=1, reg_alpha=0, reg_lambda=1, scale_pos_weight=1,
